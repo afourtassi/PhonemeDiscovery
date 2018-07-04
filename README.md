@@ -6,7 +6,7 @@ An earlier version of this upcoming paper was published as Fourtassi, Dunbar & D
 
 To reproduce the results, run the bash code in "run.sh" using a terminal.
 
-The only dependency you need to install is the python library "Gensim".
+First, you need to install the python library "Gensim".
 
 The code takes two arguments:
 1) a language: 'Eng' or 'Jap' (for English and Japanese)
