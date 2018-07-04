@@ -16,4 +16,4 @@ For example, the folowing command line computes the differentiation score for En
 
 ./run.sh Eng seg
 
-The output goes to the folder "res"
+The output goes to the folder "res".
