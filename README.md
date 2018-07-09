@@ -2,8 +2,6 @@
 
 This repository contains the pipeline used to produce the results in Fourtassi, Dunbar & Dupoux (in prep.). 
 
-An earlier version of this upcoming paper was published as Fourtassi, Dunbar & Dupoux (2014). CogSci.
-
 To reproduce the results, run the bash code in "run.sh" using a terminal.
 
 First, you need to install the python library "Gensim".
