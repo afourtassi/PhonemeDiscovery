@@ -68,31 +68,18 @@ data_sum <- data_all %>%
   dplyr::summarise(mean = mean(AUC),
             sd = sd(AUC)) %>%
   dplyr::mutate(sd_up = mean + 2*sd,
-         sd_low = mean - 2*sd)
-
-ggplot(data_sum,  
-       #aes(x = variation, y = mean, shape=Segmentation)) +
-       aes(x = variation, y = mean)) +
-  geom_point()+
-  geom_line()+
-  geom_pointrange(aes(ymin = sd_low, ymax = sd_up), 
-                  position = position_dodge(width = .03), size=0.5) +
-  geom_point(data=subset(data_sum, variation == 25 | variation == 41), col='red')+
-  
-  scale_x_log10() +
-  theme_few()+
-theme(aspect.ratio = 0.7, legend.title = element_text(size=8)) +  facet_grid(Segmentation ~ language) +
-  xlab("Inventory Size") +ylab("Differentiation score (AUC)")
+         sd_low = mean - 2*sd) %>%
+  dplyr::rename(AUC= mean)
 
 
 ggplot(data_all, 
       aes(x = variation, y = AUC)) +
   geom_point(col='black', fill = "white", alpha = 0.05)+
-  geom_point(data = subset(data_all, variation==25 | variation == 41), col='blue', alpha = 0.05)+
-  geom_point(data = data_sum, col='blue', alpha = 0.05)+
-  
+  geom_point(data = subset(data_all, variation==25 | variation == 41), col='red', alpha = 0.05)+
 
-  stat_summary(fun.y="mean", geom="point", col='red', size=0.5)+
+  geom_line(data = data_sum, col='black')+
+geom_point(data = data_sum, col='black', size = 2)+
+  #stat_summary(fun.y="mean", geom="point", col='red', size=0.5)+
   scale_x_log10() +
 theme(aspect.ratio = 0.7, legend.title = element_text(size=8)) +  
   theme_few()+
@@ -124,7 +111,7 @@ ggplot(histo,
   theme_few() + 
   theme(aspect.ratio = 0.7, legend.title = element_text(size=8)) +  facet_grid(Segmentation ~ language)+
   scale_y_continuous(labels = scales::percent)+
-  xlab("Variation") +ylab("Percent optimal")
+  xlab("Inventory size") +ylab("Percent optimal")
 
 
 ```
@@ -178,26 +165,66 @@ The effect of data size
 
 ```{r echo=FALSE}
 
-
 data_size <- read_delim("res/results_size.txt", delim = " ")
 
 data_size$size <- mapvalues(data_size$size, 
                                      from = c('100%','10%','1%','0.1%'),
                                      to = c('50k', '5k', '500', '50'))
-                            
-data_size$size <- factor(data_size$size, levels = c('50k', '5k', '500', '50'))
 
-ggplot(data_size, 
-      aes(x = var, y = AUC)) +
+#Here I stich new full data analysis (50k) with old small data (<50k). The updated small data analysis is runing, but there should be minor differences, if any!
+
+data_small <- data_size %>%
+  mutate(Segmentation = 'Ideal') %>%
+  dplyr::rename(language = lang,
+         variation =var,
+         context = cont,
+         dimension = dim,
+         StD=`SD\t`) %>%
+  filter(size != '50k')
+
+data_full <- data_all %>%
+  mutate(size = '50k') %>%
+  filter(Segmentation  =='Ideal' )
+
+data_size_new <- data_full %>%
+  bind_rows(data_small)
+                            
+data_size_new$size <- factor(data_size_new$size, levels = c('50k', '5k', '500', '50'))
+
+
+ggplot(data_size_new, 
+      aes(x = variation, y = AUC)) +
   geom_point(col='black', fill = "white", alpha = 0.05)+
-  geom_point(data = subset(data_size, var==25 | var == 41), col='blue', alpha = 0.05)+
-  stat_summary(fun.y="mean", geom="point", col='red', size=0.5)+
+  geom_point(data = subset(data_size_new, variation==25 | variation == 41), col='red', alpha = 0.05)+
+  #stat_summary(fun.y="mean", geom="point", col='blue', size=0.5)+
   scale_x_log10() +
 theme(aspect.ratio = 0.7, legend.title = element_text(size=8)) +  
   theme_few()+
-  facet_grid(size ~ lang) +
+  facet_grid(size ~ language) +
   theme(aspect.ratio = 0.7)+
   xlab("Inventory size") +ylab("Differentiation score (AUC)")
 
 ```
+Histogram for size
 
+```{r}
+
+#Do the histogram through calculation
+histo_size <- data_size_new %>%
+  group_by(language, size, context, dimension) %>%
+  filter(AUC == max(AUC)) %>%
+  arrange(language, size, context, dimension, variation)
+
+ggplot(histo_size, 
+      aes(x = variation)) +
+  geom_histogram(aes(y = (..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..]),
+                 binwidth=0.3)+
+  scale_x_log10(limits = c(1.9,321)) +
+  theme_few() + 
+  theme(aspect.ratio = 0.7, legend.title = element_text(size=8)) +  
+  facet_grid(size ~ language)+
+  scale_y_continuous(labels = scales::percent)+
+  xlab("Inventory size") +ylab("Percent optimal")
+
+
+```
