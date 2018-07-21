@@ -15,7 +15,7 @@ library(plyr)
 ```
 
 
-Here show the main summary results 
+The main summary results 
 
 ```{r }
 
@@ -85,6 +85,22 @@ theme(aspect.ratio = 0.7, legend.title = element_text(size=8)) +  facet_grid(Seg
   xlab("Inventory Size") +ylab("Differentiation score (AUC)")
 
 
+ggplot(data_all, 
+      aes(x = variation, y = AUC)) +
+  geom_point(col='black', fill = "white", alpha = 0.05)+
+  geom_point(data = subset(data_all, variation==25 | variation == 41), col='blue', alpha = 0.05)+
+  geom_point(data = data_sum, col='blue', alpha = 0.05)+
+  
+
+  stat_summary(fun.y="mean", geom="point", col='red', size=0.5)+
+  scale_x_log10() +
+theme(aspect.ratio = 0.7, legend.title = element_text(size=8)) +  
+  theme_few()+
+  facet_grid(Segmentation ~ language) +
+  theme(aspect.ratio = 0.7)+
+  xlab("Inventory size") +ylab("Differentiation score (AUC)")
+
+
   
 ```
 
@@ -114,7 +130,7 @@ ggplot(histo,
 ```
 
 
-here I show the distribution for the parameter setting dim=20, context=20
+The distribution for the parameter setting dim=20, context=20
 
 ```{r}
 dist_Eng <- read_delim("res/dist_gold_Eng.txt", delim = " ") %>%
@@ -158,7 +174,7 @@ ggplot(dist,  aes(value, fill=distribution))+
 
 ```
 
-Here show the effect of data size
+The effect of data size
 
 ```{r echo=FALSE}
 
