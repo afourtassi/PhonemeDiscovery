@@ -161,41 +161,66 @@ ggplot(dist,  aes(value, fill=distribution))+
 
 ```
 
-The effect of data size
+Score for different sizes
 
-```{r echo=FALSE}
-
-data_size <- read_delim("res/results_size.txt", delim = " ")
-
-data_size$size <- mapvalues(data_size$size, 
-                                     from = c('100%','10%','1%','0.1%'),
-                                     to = c('50k', '5k', '500', '50'))
-
-#Here I stich new full data analysis (50k) with old small data (<50k). The updated small data analysis is runing, but there should be minor differences, if any!
-
-data_small <- data_size %>%
-  mutate(Segmentation = 'Ideal') %>%
-  dplyr::rename(language = lang,
-         variation =var,
-         context = cont,
-         dimension = dim,
-         StD=`SD\t`) %>%
-  filter(size != '50k')
-
-data_full <- data_all %>%
-  mutate(size = '50k') %>%
-  filter(Segmentation  =='Ideal' )
-
-data_size_new <- data_full %>%
-  bind_rows(data_small)
-                            
-data_size_new$size <- factor(data_size_new$size, levels = c('50k', '5k', '500', '50'))
+```{r}
+#uplaod data
+gold_eng_50k <- gold_eng %>%
+  mutate(size='50k')
+gold_jap_50k <- gold_jap %>%
+  mutate(size='50k')
+gold_eng_5k <- read_delim("res/results_gold_Eng_5k.txt", delim = "\t") %>%
+  mutate(size='5k')
+gold_jap_5k <- read_delim("res/results_gold_Jap_5k.txt", delim = "\t") %>%
+  mutate(size='5k')
+gold_eng_500 <- read_delim("res/results_gold_Eng_500.txt", delim = "\t") %>%
+  mutate(size='500')
+gold_jap_500 <- read_delim("res/results_gold_Jap_500.txt", delim = "\t") %>%
+  mutate(size='500')
+gold_eng_50 <- read_delim("res/results_gold_Eng_50.txt", delim = "\t") %>%
+  mutate(size='50') 
+gold_jap_50 <- read_delim("res/results_gold_Jap_50.txt", delim = "\t") %>%
+  mutate(size='50')
 
 
-ggplot(data_size_new, 
+size_eng <- gold_eng_50k %>%
+  bind_rows(gold_eng_5k) %>%
+  bind_rows(gold_eng_500) %>%
+  bind_rows(gold_eng_50)
+
+size_eng$variation <- mapvalues(size_eng$variation, 
+                                     from = c('h_2', 'h_4', 'h_10', 'h_19', 'phonemic', 'htk_80', 'htk_160', 'htk_320'),
+                                
+                                     to = c(2, 4,  10,  19, 41,  80,  160, 320))
+
+
+size_jap <- gold_jap_50k %>%
+  bind_rows(gold_jap_5k) %>%
+  bind_rows(gold_jap_500) %>%
+  bind_rows(gold_jap_50)
+
+size_jap$variation <- mapvalues(size_jap$variation, 
+                                     from = c('h_2', 'h_4', 'h_8', 'h_13', 'phonemic', 'htk_50', 'htk_100', 'htk_200'),
+                                
+                                     to = c(2, 4,  8,  13, 25,  50,  100, 200))
+
+
+
+size_all <- size_eng %>%
+  bind_rows(size_jap)
+
+size_all$language <- mapvalues(size_all$language, 
+                                     from = c('Eng', 'Jap'),
+                                     to = c('English', 'Japanese'))
+
+size_all$size <- factor(size_all$size, levels = c('50k', '5k', '500', '50'))
+
+size_all$variation <- as.numeric(size_all$variation)
+
+ggplot(size_all, 
       aes(x = variation, y = AUC)) +
   geom_point(col='black', fill = "white", alpha = 0.05)+
-  geom_point(data = subset(data_size_new, variation==25 | variation == 41), col='red', alpha = 0.05)+
+  geom_point(data = subset(size_all, variation==25 | variation == 41), col='red', alpha = 0.05)+
   #stat_summary(fun.y="mean", geom="point", col='blue', size=0.5)+
   scale_x_log10() +
 theme(aspect.ratio = 0.7, legend.title = element_text(size=8)) +  
@@ -204,13 +229,16 @@ theme(aspect.ratio = 0.7, legend.title = element_text(size=8)) +
   theme(aspect.ratio = 0.7)+
   xlab("Inventory size") +ylab("Differentiation score (AUC)")
 
+
 ```
+
+
 Histogram for size
 
 ```{r}
 
 #Do the histogram through calculation
-histo_size <- data_size_new %>%
+histo_size <- size_all %>%
   group_by(language, size, context, dimension) %>%
   filter(AUC == max(AUC)) %>%
   arrange(language, size, context, dimension, variation)
